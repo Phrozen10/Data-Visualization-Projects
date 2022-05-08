@@ -1,0 +1,38 @@
+---
+title: 'Lab 1 DSCI 605: My First Histogram'
+author: "DeBoris Leonard"
+date: "1/22/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+#set working direcoty
+setwd("~/Desktop/Ball State/DSCI605")
+
+#read in data
+soc <- read.csv('Soil Organic Carbon.csv')
+
+
+```
+
+## Soil Organic Carbon Levels
+I took the information from the  Soil Organic Carbon csv file and created a 
+histogram of the levels at 10 centimeters. I next changed the column outline
+to black and the gradient to a green to blue. Green representing "High" levels 
+and blue representing "Low" levels of carbon. 
+
+```{r pressure, echo=FALSE}
+#choose variable to make histogram
+x10cm<-soc[,3]
+
+ggplot(data = NULL, aes(x10cm)) +
+  geom_histogram(breaks =seq(0,max(x10cm), by=1),
+                 col='black',
+                 aes(fill=..count..)) +
+  scale_fill_gradient('Count', low='blue', high='green') +
+  labs(title = 'Histogram for Soil Organic Carbon(SOC) at 10cm', x='SOC(%)', 
+       y='Count')
+```
+

@@ -1,0 +1,162 @@
+---
+title: "Congress Analysis"
+author: "Phrozen10"
+date: "4/27/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tmap)
+library(leaflet)
+library(ggforce)
+library(sf)
+library(rgdal)
+library(raster)
+library(rgeos)
+library(ggplot2)
+library(htmlwidgets)
+library(grid)
+library(rnaturalearth)
+library(rnaturalearthdata)
+library(ggrepel)
+library(cowplot)
+library(ggspatial)
+library(spData)
+library(devtools)
+library(dplyr)
+library(gifski)
+library(tidyr)
+library(lubridate)
+library(TSstudio)
+library(forecast)
+library(MLmetrics)
+library(viridis)
+library(hrbrthemes)
+library(viridisLite)
+library(padr)
+library(rmdformats)
+library(recipes)
+library(tseries)
+library(plotly)
+library(egg)
+library(gtable)
+library(grid)
+library(lattice)
+
+setwd("~/Desktop/Git/Data Visualization Projects")
+df <-read.csv('legislators-current.csv')
+df2<-read.csv('women_congress65-117v2.csv')
+```
+## Introduction
+
+This dataset lists out Congress and Senate members with some identifiable information such as name, nickname, birthdate, district and other information on means of communication such as websites and social media. I will use this data to visualize the age, gender and ethnicity demographics within the legislative branch.
+
+## Data
+
+This dataset list out Congress and Senate members with some identifiable 
+information such as name, nickname, birthdate, district and other information on means of communication such as websites and social media. I will use this data 
+to visualize the age, gender and ethnicity demographics with in the 
+legislative branch. 
+
+## Age by Party
+Of the 3 political affiliations; Democrat, Independent and Republican the Independents tend to be higher in age. An interesting finding was that the Republican party had two of the youngest members.
+
+The boxplot with a jitter below points out each member while indicating where the median age is. The outliers are above and below the “box”. The dependent variable was Party.
+
+```{r, echo=FALSE}
+#prepare the data
+df$age = as.numeric(difftime(Sys.Date(),df$birthday, units = "weeks"))/52.25
+
+p0 <- df %>% ggplot(aes(party,age))
+
+### default box plot
+p1 <- p0 + geom_boxplot() 
+  
+### box plot color coded
+p2 <- p0 + geom_boxplot(aes(col = party, fill = party), alpha = .5) +#boxplot colored by party and filled by the same 
+  scale_fill_manual(values = alpha(c("blue","green", "red"), .3))+#make the box values match the colors
+  geom_jitter() +#add a jitter to show each member
+  labs(x = "Political Party", y = "Age as of 2021",
+       title = "Age of Representatives and Senators by Party")+
+  theme_dark()+
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1),#turn the x axis text to be slightly angled 
+        plot.background = element_rect(fill = "#199c8e")) #fill the  background
+p2
+```
+
+## Members of Congress by State
+
+The next plot details the number of Congresspersons per state. The graph shows California as the state with the most representation. Being that Congressional seats are based on population; this was not a surprising revelation.
+  
+The process to create this plot included creating a new table called reps, which was filtered by the “type” column. This allowed us to remove the Senators and only take in Congresspersons. The dependent variable was party, and the independent variable was party.
+
+
+```{r, echo=FALSE}
+#create a reps dataframe
+reps <- df %>%
+ filter(type == 'rep')%>% #filter on only representatives
+  summarise(full_name,state, party)
+
+ggplot(reps, aes(x= state) ) + geom_bar(mapping = aes(fill = party))+ #create a bar graph by state
+  scale_fill_manual(values = alpha(c("blue","red"), .3))+ #fill each party 
+  labs(title = 'Congress Representatives by State & Party')+
+  theme(axis.text.x = element_text(size = 4),#change the x axis font to fit all states
+        plot.background = element_rect(fill = "#199c8e")) #fill the background
+```
+
+
+## Gender by Party
+
+The plot below shows the gender by party. The graph indicates that Democrat women skew older than men. There are no women Independents in either Chamber. Looking at the Republican party the male members tend to be older than the women.
+
+The data relied on the gender column as the dependent variable.
+
+
+```{r, echo=FALSE}
+  
+#gender broken down by age
+ggplot(df, aes(fill=gender, y=age, x=party)) + # create bar graph
+    geom_bar(position="dodge", stat="identity")+ #setting overlapping objects side by side
+    labs(title = 'Congress & Senate Age by Gender', x='Political Party', 
+         y='Age as of 2021')+
+    theme_update()+
+    theme(plot.background = element_rect(fill = "#199c8e"))#set background color
+```
+
+
+
+
+
+
+## Congress Women in Congress (1960-2021)
+
+The final visual shows the progression of women in Congress and the Senate over 104 years. The results show the increase in women representation in the legislature. The first sharpest increases occurred between 1991-1993 and then a comparable spike between 2017-2019. These where around significant political changes in the country historically.
+
+The graph shows the correlation of time and representation. As the country has evolved, representation at the federal level has begun to reflect the gender makeup of the country.
+
+
+```{r, echo=FALSE}
+##create time series dataframe
+women_reps2 <- df2 %>%
+  filter(!is.na(Member)) %>% # remove NAs
+  group_by(Year)%>% #group the points by year
+  summarise(Members=sum(as.numeric(Member))) %>%
+  filter(Year >'1917' & Year < '2022')# filter the years
+
+#create plot
+women_plot2 <- women_reps2 %>% 
+  ggplot(aes(Year, y=Members)) + #set the x and y axis variables
+    geom_area(fill="#a6a037", alpha=0.5) +#set fill color inside line
+    geom_jitter()+#add jitter to plot to show points for each member
+    labs(y = 'Representatives',x='Year',title ='Women in Congress/Senate (1917-2021)' ) +
+    theme(plot.background = element_rect(fill = "#199c8e")) #set background color
+    
+
+
+women_plot2<- ggplotly(women_plot2) # use plotly for interactive effect
+women_plot2
+
+```
+
+
+

@@ -1,0 +1,140 @@
+---
+title: "Module 6 Lab 5:PCA"
+author: "DeBoris Leonard"
+date: "2/19/2022"
+output: html_document
+---
+<div style="margin-bottom:50px;">
+```{r, include=FALSE}
+
+library(factoextra)
+library(FactoMineR)
+library(corrplot)
+library(RColorBrewer)
+library(readxl)
+library(ggplot2)
+
+
+# import sample data
+Samples<- read_xlsx("~/Desktop/Ball State/DSCI605/Samples-1.xlsx")
+Samples_1 <-Samples[1:6,2:8]
+```
+
+The data for this report came from the "Samples-1" excel file. the version 
+downloaded contained 6 observations (Rows) and 8 variables (Columns). The 
+first column was a character type with the header "Sites". Unable to convert this column to row names, this column was removed in the data wrangling process.
+
+</div>
+**PCA on Sample Data**
+```{r, echo=FALSE}
+#Run PCA on Sample data
+Samp_pca <-PCA(Samples_1, scale.unit = FALSE, graph = FALSE)
+print(Samp_pca)
+```
+
+
+**Calculating the Eiganvalue**
+```{r, echo=FALSE}
+#get Eiganvalue of PCA
+eig_val <-get_eigenvalue(Samp_pca)
+eig_val
+```
+
+```{r,fig.cap= "***Figure 1:*** Using fviz_eig Function",fig.align ='center', echo=FALSE}
+
+
+#visualize data using fviz_eig functions
+fviz_eig(Samp_pca, addlabels = TRUE, ylim=c(0,100))
+```
+
+Figure 1 shows the variance of the 5 dimensions in the PCA performed on the  
+Samples-1 data. We see the most variability in Dimensions 1 (65.7%) and    
+Dimensions 2(25.1%). This means we have the majority of our our information 
+needed is captured in Principle Components 1 and 2 or "Dimensions 1 and 2".
+
+
+**Creating "Variable" and "Individual" PCA objects**
+```{r, echo=FALSE}
+#create variable and ind individual PCA objects
+var <- get_pca_var(Samp_pca)
+var
+
+ind<-get_pca_ind(Samp_pca)
+ind
+```
+
+
+```{r, echo=FALSE,fig.align ='center', fig.cap= '***Figure 2:*** Correlation Plot using corrplot Function'}
+#Correlation plot
+corrplot(var$cos2, is.corr = FALSE)
+```
+
+Our Correlation Matrix indicates that Species E, B and A (in descending order), 
+have strong correlations in Dimension 1. We also see that Species C has a 
+noteworthy correlation in Dimension 2. The remainders do not show significant 
+correlation. 
+
+
+**Variable PCA**
+```{r, echo=FALSE}
+#Coordinates 
+head(var$coord)
+#Cos2: quality on the factor map
+head(var$cos2)
+#Contributions to the principal components
+head(var$contrib)
+# Correlation 
+head(var$cor)
+
+```
+
+
+```{r, echo=FALSE,fig.align ='center', fig.cap="***Figure 3:*** Using fviz_pca_var Function"}
+#plot the variable PCA
+fviz_pca_var(Samp_pca,
+             col.var = "contrib", 
+             gradient.cols = 'Dark2',
+             repel = TRUE     # Avoid text overlapping
+             )
+
+```
+
+Figure 3 shows our correlation of variables. We see that Species B,E,F and G  
+are the farthest away from the center and have significance. 
+
+
+**Individual PCA**
+```{r, echo=FALSE}
+#Coordinates 
+head(ind$coord)
+#Cos2: quality on the factor map
+head(ind$cos2)
+#Contributions to the principal components
+head(ind$contrib)
+```
+
+
+```{r, echo=FALSE,fig.align ='center', fig.cap= "***Figure 4:*** Using fviz_pca_indFunction"}
+#plot the variable PCA
+fviz_pca_ind(Samp_pca, col.ind= 'contrib', 
+             gradient.cols=c("grey", "#2E9FDF", "#FC4E07" ), repel = TRUE)
+```
+
+Figure 4 shows that Sites 2 & 3 are significant variables.
+
+
+
+# ***APENDIX***
+
+ 
+```{r, echo=FALSE,fig.align ='center', fig.cap="***Variable Box chart***"}
+#bar chart of correlation
+fviz_cos2(Samp_pca, choice = 'var', axes = 1:2)
+```
+
+
+
+```{r, echo=FALSE,fig.align ='center', fig.cap="***Individual Box chart***"}
+fviz_cos2(Samp_pca, choice = 'ind', axes = 1:2)
+```
+
